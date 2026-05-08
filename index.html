@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AE Particulate Sensor | Live Dashboard</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,7 +17,11 @@
     <header>
         <div class="container header-content">
             <div class="brand">
-                <img src="logo.png" alt="AE Logo" class="logo">
+                <img src="logo.png" alt="Company Logo" class="company-logo">
+                
+                <div class="brand-divider"></div>
+
+                <i data-lucide="activity" class="cyan-icon" style="width: 32px; height: 32px;"></i>
                 <div class="brand-text">
                     <h1>AE SENSOR</h1>
                     <p>Live Particulate Monitor</p>
@@ -34,14 +37,13 @@
         </div>
     </header>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="modal-overlay hidden">
         <div class="modal-content glass">
             <h2>Connection Settings</h2>
-            <p>Enter the IP address of your ESP32 Sensor:</p>
+            <p>Enter the IP address of your ESP32 Sensor or Simulator:</p>
             <div class="input-group">
                 <span class="prefix">http://</span>
-                <input type="text" id="backend-ip" placeholder="e.g., 192.168.4.1" value="192.168.4.1">
+                <input type="text" id="backend-ip" placeholder="e.g., 127.0.0.1:8000" value="127.0.0.1:8000">
             </div>
             <div class="modal-actions">
                 <button id="save-settings" class="btn-cyan">Save & Connect</button>
@@ -51,14 +53,21 @@
     </div>
 
     <main class="container">
-        <!-- Hero Section: AQI -->
         <section class="hero-section">
             <div class="aqi-card glass animate-in">
                 <div class="aqi-header">
-                    <span class="label">OVERALL AQI</span>
+                    <span class="label" style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="gauge" class="cyan-icon" style="width: 18px; height: 18px;"></i> OVERALL AQI
+                    </span>
                     <span id="last-updated">Updating...</span>
                 </div>
                 <div class="aqi-main">
+                    <div class="aqi-selector">
+                        <button class="pollutant-btn active" data-pollutant="PM2.5">PM 2.5 AQI</button>
+                        <button class="pollutant-btn" data-pollutant="PM10">PM 10 AQI</button>
+                        <button class="pollutant-btn" data-pollutant="PM25">PM 25 (Raw)</button>
+                    </div>
+
                     <div class="aqi-value-container">
                         <h2 id="aqi-value" class="value">--</h2>
                         <div id="aqi-category" class="category">WAITING</div>
@@ -73,42 +82,26 @@
             </div>
         </section>
 
-        <!-- Secondary Metrics -->
-        <section class="metrics-grid">
-            <div class="metric-card glass animate-in" style="animation-delay: 0.1s">
-                <div class="metric-header">
-                    <i data-lucide="microscope" class="cyan-icon"></i>
-                    <span>PM 2.5</span>
+        <section class="chart-section animate-in" style="animation-delay: 0.1s">
+            <div class="glass" style="padding: 24px; margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; margin: 0;">
+                        <i data-lucide="trending-up" class="cyan-icon"></i> AQI Trend
+                    </h3>
+                    <div class="timeframe-selector" style="display: flex; gap: 5px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px;">
+                        <button class="time-btn active" data-time="60">1H</button>
+                        <button class="time-btn" data-time="360">6H</button>
+                    </div>
                 </div>
-                <div class="metric-value">
-                    <span id="pm25-value" class="value">--</span>
-                    <span class="unit">µg/m³</span>
-                </div>
-            </div>
-
-            <div class="metric-card glass animate-in" style="animation-delay: 0.2s">
-                <div class="metric-header">
-                    <i data-lucide="layers" class="cyan-icon"></i>
-                    <span>PM 10</span>
-                </div>
-                <div class="metric-value">
-                    <span id="pm10-value" class="value">--</span>
-                    <span class="unit">µg/m³</span>
+                
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="aqiChart"></canvas>
                 </div>
             </div>
+        </section>
 
-            <div class="metric-card glass animate-in" style="animation-delay: 0.3s">
-                <div class="metric-header">
-                    <i data-lucide="database" class="cyan-icon"></i>
-                    <span>PM 25</span>
-                </div>
-                <div class="metric-value">
-                    <span id="pm25-actual-value" class="value">--</span>
-                    <span class="unit">µg/m³</span>
-                </div>
-            </div>
-
-            <div class="metric-card glass animate-in" style="animation-delay: 0.4s">
+        <section class="env-grid animate-in" style="animation-delay: 0.2s">
+            <div class="metric-card glass hero-metric">
                 <div class="metric-header">
                     <i data-lucide="thermometer" class="cyan-icon"></i>
                     <span>Temperature</span>
@@ -119,7 +112,7 @@
                 </div>
             </div>
 
-            <div class="metric-card glass animate-in" style="animation-delay: 0.5s">
+            <div class="metric-card glass hero-metric">
                 <div class="metric-header">
                     <i data-lucide="droplets" class="cyan-icon"></i>
                     <span>Humidity</span>
@@ -131,11 +124,39 @@
             </div>
         </section>
 
-        <!-- Technical Features (Raw Signal) -->
-        <section class="tech-section animate-in" style="animation-delay: 0.6s">
-            <div class="tech-card glass">
-                <h3><i data-lucide="cpu" class="cyan-icon"></i> Sensor Raw Signals</h3>
-                <div class="tech-grid">
+        <section class="tech-section animate-in" style="animation-delay: 0.3s">
+            <details class="tech-card glass">
+                <summary style="cursor: pointer; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="cpu" class="cyan-icon"></i> Advanced: Sensor Raw Signals (Click to expand)
+                </summary>
+                <div class="tech-grid" style="margin-top: 20px;">
+                    <div class="tech-item">
+                        <span class="tech-label">
+                            Raw PM 2.5 
+                            <span class="tooltip-trigger" data-tooltip="Fine inhalable particles (≤ 2.5 µm). Can penetrate deep into the lungs.">
+                                <i data-lucide="info" style="width: 12px; height: 12px; opacity: 0.5;"></i>
+                            </span>
+                        </span>
+                        <span class="tech-value"><span id="pm25-value">--</span> µg/m³</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">
+                            Raw PM 10
+                            <span class="tooltip-trigger" data-tooltip="Coarse inhalable particles (≤ 10 µm). Usually from dust or construction.">
+                                <i data-lucide="info" style="width: 12px; height: 12px; opacity: 0.5;"></i>
+                            </span>
+                        </span>
+                        <span class="tech-value"><span id="pm10-value">--</span> µg/m³</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">
+                            Raw PM 25
+                            <span class="tooltip-trigger" data-tooltip="Total suspended particulate matter. Used for raw sensor diagnostics.">
+                                <i data-lucide="info" style="width: 12px; height: 12px; opacity: 0.5;"></i>
+                            </span>
+                        </span>
+                        <span class="tech-value"><span id="pm25-actual-value">--</span> µg/m³</span>
+                    </div>
                     <div class="tech-item">
                         <span class="tech-label">Avg Signal</span>
                         <span id="raw-avg" class="tech-value">--</span>
@@ -145,7 +166,7 @@
                         <span id="raw-var" class="tech-value">--</span>
                     </div>
                 </div>
-            </div>
+            </details>
         </section>
     </main>
 
@@ -155,9 +176,9 @@
         </div>
     </footer>
 
-    <script src="main.js"></script>
+    <script src="script.js"></script>
     <script>
-        // Initialize Lucide icons
+        // Initialize Lucide icons after the DOM loads
         lucide.createIcons();
     </script>
 </body>
