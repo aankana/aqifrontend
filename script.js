@@ -9,7 +9,7 @@ const elements = {
     // Main Hero
     aqiValue: document.getElementById('aqi-value'),
     aqiCategory: document.getElementById('aqi-category'),
-    aqiMoodIcon: document.getElementById('aqi-mood-icon'),
+    aqiIconContainer: document.querySelector('.aqi-icon'),
     aqiProgressBar: document.getElementById('aqi-progress-bar'),
     
     // Environment
@@ -39,7 +39,7 @@ const elements = {
 // Application State
 // -----------------------------------------
 let config = {
-    ip: localStorage.getItem('ae_sensor_ip') || '127.0.0.1:8000',
+    ip: localStorage.getItem('ae_sensor_ip') || '192.168.4.1',
     pollInterval: 1000, 
     timer: null,
     activePollutant: 'PM2.5',
@@ -336,40 +336,48 @@ function updateAQIStyle(value, category) {
     let icon = 'help-circle';
     let progress = 0;
 
+    // Calculate how wide the progress bar should be
     if (value !== "--") {
         progress = Math.min((value / 500) * 100, 100);
     }
 
+    // Set the vibrant colors and icons based on CPCB categories
     if (category.includes('GOOD')) {
-        color = '#00f5d4';
+        color = '#00e676'; // Pure Vibrant Green
         icon = 'smile';
     } else if (category.includes('SATISFACTORY')) {
-        color = '#94d2bd';
+        color = '#b2ff59'; // Light Lime Green
         icon = 'smile';
     } else if (category.includes('MODERATE')) {
-        color = '#fee440';
+        color = '#fee440'; // Yellow
         icon = 'meh';
     } else if (category.includes('POOR') && !category.includes('VERY')) {
-        color = '#f4a261';
+        color = '#f4a261'; // Orange
         icon = 'frown';
     } else if (category.includes('VERY POOR')) {
-        color = '#e76f51';
+        color = '#e76f51'; // Red-Orange
         icon = 'frown';
     } else if (category.includes('SEVERE')) {
-        color = '#ff5d8f';
+        color = '#ff4d6d'; // Bright Red
         icon = 'alert-triangle';
     } else if (category === 'RAW VALUE') {
-        color = '#00ffff';
+        color = '#00ffff'; // Cyan for raw data
         icon = 'database';
         progress = Math.min((value / 100) * 100, 100); 
     }
 
+    // 1. Apply color to the Text Category
     elements.aqiCategory.style.color = color;
+    
+    // 2. Apply width and solid background color to the Progress Bar
     elements.aqiProgressBar.style.width = `${progress}%`;
     elements.aqiProgressBar.style.backgroundColor = color;
     
-    elements.aqiMoodIcon.setAttribute('data-lucide', icon);
-    lucide.createIcons();
+    // 3. Inject and render the Mood Icon
+    if (elements.aqiIconContainer) {
+        elements.aqiIconContainer.innerHTML = `<i data-lucide="${icon}" size="48"></i>`;
+        lucide.createIcons();
+    }
 }
 
 // -----------------------------------------
@@ -432,4 +440,4 @@ function runMockTest() {
     }, 1000); 
 }
 
- runMockTest();
+ //runMockTest();
