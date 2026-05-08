@@ -1,156 +1,164 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AE Particulate Sensor | Real-time Dashboard</title>
-    <meta name="description" content="Real-time air quality monitoring for AE Particulate Sensor. Monitor AQI, PM2.5, PM10, Temperature, and Humidity." />
-    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AE Particulate Sensor | Live Dashboard</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" crossorigin src="/assets/index-Csc0t5tx.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CRK3cr7F.css">
-  </head>
-  <body>
-    <div id="app">
-      <header class="glass">
-        <div class="header-content container">
-          <div class="logo-area">
-            <img src="/logo.png" alt="AE Logo" class="brand-logo" />
-            <div class="brand-text">
-              <span class="brand-name">AE SENSOR</span>
-              <span class="brand-tagline">Air Quality Monitor</span>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <header>
+        <div class="container header-content">
+            <div class="brand">
+                <img src="logo.png" alt="AE Logo" class="logo">
+                <div class="brand-text">
+                    <h1>AE SENSOR</h1>
+                    <p>Live Particulate Monitor</p>
+                </div>
             </div>
-          </div>
-          <div class="status-area">
-            <div id="status-indicator" class="indicator disconnected"></div>
-            <span id="status-text">Connecting...</span>
-            <button id="settings-btn" class="icon-btn"><i data-lucide="settings"></i></button>
-          </div>
+            <div class="status-area">
+                <div id="status-indicator" class="indicator disconnected"></div>
+                <span id="status-text">Connecting...</span>
+                <button id="settings-btn" class="icon-btn" title="Connection Settings">
+                    <i data-lucide="settings"></i>
+                </button>
+            </div>
         </div>
-      </header>
+    </header>
 
-      <!-- Settings Modal -->
-      <div id="settings-modal" class="modal-overlay hidden">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
         <div class="modal-content glass">
-          <h2>Connection Settings</h2>
-          <p>Enter the IP address of your backend server:</p>
-          <div class="input-group">
-            <input type="text" id="backend-ip" placeholder="e.g., 192.168.4.2" value="localhost" />
-            <span>:3000</span>
-          </div>
-          <button id="save-settings" class="btn-cyan">Save & Reconnect</button>
-          <button id="close-settings" class="btn-text">Close</button>
+            <h2>Connection Settings</h2>
+            <p>Enter the IP address of your ESP32 Sensor:</p>
+            <div class="input-group">
+                <span class="prefix">http://</span>
+                <input type="text" id="backend-ip" placeholder="e.g., 192.168.4.1" value="192.168.4.1">
+            </div>
+            <div class="modal-actions">
+                <button id="save-settings" class="btn-cyan">Save & Connect</button>
+                <button id="close-settings" class="btn-text">Cancel</button>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <main class="container">
+    <main class="container">
         <!-- Hero Section: AQI -->
         <section class="hero-section">
-          <div class="aqi-card glass glow-cyan">
-            <div class="card-header">
-              <i data-lucide="wind" class="icon-cyan"></i>
-              <h3>Overall AQI</h3>
+            <div class="aqi-card glass animate-in">
+                <div class="aqi-header">
+                    <span class="label">OVERALL AQI</span>
+                    <span id="last-updated">Updating...</span>
+                </div>
+                <div class="aqi-main">
+                    <div class="aqi-value-container">
+                        <h2 id="aqi-value" class="value">--</h2>
+                        <div id="aqi-category" class="category">WAITING</div>
+                    </div>
+                    <div class="aqi-icon">
+                        <i id="aqi-mood-icon" data-lucide="wind" size="48"></i>
+                    </div>
+                </div>
+                <div class="aqi-progress-container">
+                    <div id="aqi-progress-bar" class="progress-bar"></div>
+                </div>
             </div>
-            <div class="aqi-value-container">
-              <h1 id="aqi-value">--</h1>
-              <div class="aqi-label" id="aqi-quality">Initializing...</div>
-            </div>
-            <div class="aqi-progress-bar">
-              <div id="aqi-progress" class="progress-fill" style="width: 0%"></div>
-            </div>
-          </div>
         </section>
 
-        <!-- Metrics Grid -->
+        <!-- Secondary Metrics -->
         <section class="metrics-grid">
-          <div class="metric-card glass" data-metric="pm2_5">
-            <div class="metric-icon">
-              <i data-lucide="layers"></i>
+            <div class="metric-card glass animate-in" style="animation-delay: 0.1s">
+                <div class="metric-header">
+                    <i data-lucide="microscope" class="cyan-icon"></i>
+                    <span>PM 2.5</span>
+                </div>
+                <div class="metric-value">
+                    <span id="pm25-value" class="value">--</span>
+                    <span class="unit">µg/m³</span>
+                </div>
             </div>
-            <div class="metric-info">
-              <span class="label">PM 2.5</span>
-              <div class="value-row">
-                <span id="pm2_5-value" class="value">--</span>
-                <span class="unit">µg/m³</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="metric-card glass" data-metric="pm10">
-            <div class="metric-icon">
-              <i data-lucide="component"></i>
+            <div class="metric-card glass animate-in" style="animation-delay: 0.2s">
+                <div class="metric-header">
+                    <i data-lucide="layers" class="cyan-icon"></i>
+                    <span>PM 10</span>
+                </div>
+                <div class="metric-value">
+                    <span id="pm10-value" class="value">--</span>
+                    <span class="unit">µg/m³</span>
+                </div>
             </div>
-            <div class="metric-info">
-              <span class="label">PM 10</span>
-              <div class="value-row">
-                <span id="pm10-value" class="value">--</span>
-                <span class="unit">µg/m³</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="metric-card glass" data-metric="pm25">
-            <div class="metric-icon">
-              <i data-lucide="box"></i>
+            <div class="metric-card glass animate-in" style="animation-delay: 0.3s">
+                <div class="metric-header">
+                    <i data-lucide="database" class="cyan-icon"></i>
+                    <span>PM 25</span>
+                </div>
+                <div class="metric-value">
+                    <span id="pm25-actual-value" class="value">--</span>
+                    <span class="unit">µg/m³</span>
+                </div>
             </div>
-            <div class="metric-info">
-              <span class="label">PM 25</span>
-              <div class="value-row">
-                <span id="pm25-value" class="value">--</span>
-                <span class="unit">µg/m³</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="metric-card glass" data-metric="temp">
-            <div class="metric-icon">
-              <i data-lucide="thermometer"></i>
+            <div class="metric-card glass animate-in" style="animation-delay: 0.4s">
+                <div class="metric-header">
+                    <i data-lucide="thermometer" class="cyan-icon"></i>
+                    <span>Temperature</span>
+                </div>
+                <div class="metric-value">
+                    <span id="temp-value" class="value">--</span>
+                    <span class="unit">°C</span>
+                </div>
             </div>
-            <div class="metric-info">
-              <span class="label">Temperature</span>
-              <div class="value-row">
-                <span id="temp-value" class="value">--</span>
-                <span class="unit">°C</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="metric-card glass" data-metric="humidity">
-            <div class="metric-icon">
-              <i data-lucide="droplets"></i>
+            <div class="metric-card glass animate-in" style="animation-delay: 0.5s">
+                <div class="metric-header">
+                    <i data-lucide="droplets" class="cyan-icon"></i>
+                    <span>Humidity</span>
+                </div>
+                <div class="metric-value">
+                    <span id="humidity-value" class="value">--</span>
+                    <span class="unit">%</span>
+                </div>
             </div>
-            <div class="metric-info">
-              <span class="label">Humidity</span>
-              <div class="value-row">
-                <span id="humidity-value" class="value">--</span>
-                <span class="unit">%</span>
-              </div>
-            </div>
-          </div>
         </section>
 
-        <section class="footer-info">
-          <p>Last updated: <span id="last-updated">Never</span></p>
+        <!-- Technical Features (Raw Signal) -->
+        <section class="tech-section animate-in" style="animation-delay: 0.6s">
+            <div class="tech-card glass">
+                <h3><i data-lucide="cpu" class="cyan-icon"></i> Sensor Raw Signals</h3>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <span class="tech-label">Avg Signal</span>
+                        <span id="raw-avg" class="tech-value">--</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="tech-label">Variance</span>
+                        <span id="raw-var" class="tech-value">--</span>
+                    </div>
+                </div>
+            </div>
         </section>
-      </main>
+    </main>
 
-      <div class="bg-blur">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-      </div>
-    </div>
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asta Epsilon Group. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
     <script>
-      // Initialize Lucide icons
-      window.addEventListener('load', () => {
+        // Initialize Lucide icons
         lucide.createIcons();
-      });
     </script>
-  </body>
+</body>
 </html>
