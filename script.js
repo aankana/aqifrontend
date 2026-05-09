@@ -392,7 +392,8 @@ function runMockTest() {
     if (config.timer) clearInterval(config.timer);
     
     // Override buffer times so you can see it move fast during testing!
-     // 6H updates every 2 seconds
+    //historyState['1H'].secondsToBuffer = 1; // 1H updates every 1 second
+    //historyState['6H'].secondsToBuffer = 2; // 6H updates every 2 seconds
     
     setInterval(() => {
         const basePM25 = 80 + (Math.sin(Date.now() / 10000) * 40); 
